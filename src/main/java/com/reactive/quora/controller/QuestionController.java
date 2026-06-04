@@ -5,10 +5,8 @@ import com.reactive.quora.dto.QuestionResponseDto;
 import com.reactive.quora.models.Question;
 import com.reactive.quora.service.IQuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -28,4 +26,12 @@ public class QuestionController {
                 .doOnError(error -> System.out.println("question creation failed" + error.getMessage()));
     }
 
+    @GetMapping
+    public Flux<QuestionResponseDto> searchQuestions(
+            @RequestParam String query,
+            @RequestParam int offset,
+            @RequestParam int page
+    ) {
+        return questionService.searchQuestions(query, offset, page);
+    }
 }

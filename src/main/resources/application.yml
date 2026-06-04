@@ -8,3 +8,8 @@ spring:
       port: 27017
       database: quora_db
       auto-index-creation: true
+
+logging:
+  level:
+    root: DEBUG                # Global log level
+    org.springframework: WARN # Specific package level

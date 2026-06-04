@@ -5,7 +5,10 @@ import com.reactive.quora.dto.QuestionResponseDto;
 import com.reactive.quora.models.Question;
 import com.reactive.quora.repositories.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -30,12 +33,22 @@ public class QuestionServiceImpl implements IQuestionService {
                 .build();
 
         return questionRepository.save(question)
-                .map(this::toQuestionDto)
+                .map(this::toQuestionResponseDto)
                 .doOnSuccess(response -> System.out.println("question created successfully" + response))
                 .doOnError(error -> System.out.println("question creation failed" + error.getMessage()));
     }
 
-    private QuestionResponseDto toQuestionDto(Question question) {
+    @Override
+    public Flux<QuestionResponseDto> searchQuestions(String searchTerm, int offset, int page) {
+        Pageable pageable = PageRequest.of(offset, page);
+
+        return questionRepository.findByTitleOrContentContainingIgnoreCase(searchTerm, pageable)
+                .map(this::toQuestionResponseDto)
+                .doOnError(error -> System.out.println("search questions failed" + error.getMessage()))
+                .doOnComplete(() -> System.out.println("search questions successfully"));
+    }
+
+    private QuestionResponseDto toQuestionResponseDto(Question question) {
         return QuestionResponseDto.builder()
                 .id(question.getId())
                 .title(question.getTitle())
