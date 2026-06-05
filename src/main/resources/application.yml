@@ -14,6 +14,8 @@ spring:
     consumer:
       group-id: view-count-consumer # This matches your current groupId in KafkaConfig.java
 
+  elasticsearch:
+    urls: http:localhost:9200
 logging:
   level:
     root: DEBUG                # Global log level

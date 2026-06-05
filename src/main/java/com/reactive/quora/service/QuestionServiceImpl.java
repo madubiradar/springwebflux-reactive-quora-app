@@ -22,10 +22,13 @@ public class QuestionServiceImpl implements IQuestionService {
 
     private final KafkaEventProducer kafkaEventProducer;
 
+    private final IQuestionIndexService questionIndexService;
+
     @Autowired
-    public QuestionServiceImpl(QuestionRepository questionRepository, KafkaEventProducer kafkaEventProducer) {
+    public QuestionServiceImpl(QuestionRepository questionRepository, KafkaEventProducer kafkaEventProducer, IQuestionIndexService questionIndexService) {
         this.questionRepository = questionRepository;
         this.kafkaEventProducer = kafkaEventProducer;
+        this.questionIndexService = questionIndexService;
     }
 
     @Override
@@ -38,9 +41,12 @@ public class QuestionServiceImpl implements IQuestionService {
                 .build();
 
         return questionRepository.save(question)
-                .map(this::toQuestionResponseDto)
-                .doOnSuccess(response -> System.out.println("question created successfully" + response))
-                .doOnError(error -> System.out.println("question creation failed" + error.getMessage()));
+                .map(savedQuestion -> {
+                    questionIndexService.createQuestionIndex(savedQuestion); // dumping the question to elasticsearch
+                    return toQuestionResponseDto(savedQuestion);
+                })
+                .doOnSuccess(response -> System.out.println("Question created successfully: " + response))
+                .doOnError(error -> System.out.println("Error creating question: " + error));
     }
 
     @Override
@@ -79,4 +85,5 @@ public class QuestionServiceImpl implements IQuestionService {
                 .createdDate(question.getCreatedAt())
                 .build();
     }
+
 }
