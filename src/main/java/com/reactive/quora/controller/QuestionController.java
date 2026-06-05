@@ -3,11 +3,14 @@ package com.reactive.quora.controller;
 import com.reactive.quora.dto.QuestionRequestionDto;
 import com.reactive.quora.dto.QuestionResponseDto;
 import com.reactive.quora.models.Question;
+import com.reactive.quora.models.QuestionElasticDocument;
 import com.reactive.quora.service.IQuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -39,5 +42,11 @@ public class QuestionController {
             @RequestParam int page
     ) {
         return questionService.searchQuestions(query, offset, page);
+    }
+
+
+    @GetMapping("/elasticsearch")
+    public List<QuestionElasticDocument> searchQuestionByElasticSearch(@RequestParam String query){
+        return questionService.searchQuestionByElasticSearch(query);
     }
 }
