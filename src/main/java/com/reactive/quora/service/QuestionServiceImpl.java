@@ -2,7 +2,9 @@ package com.reactive.quora.service;
 
 import com.reactive.quora.dto.QuestionRequestionDto;
 import com.reactive.quora.dto.QuestionResponseDto;
+import com.reactive.quora.events.ViewCountEvent;
 import com.reactive.quora.models.Question;
+import com.reactive.quora.producer.KafkaEventProducer;
 import com.reactive.quora.repositories.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -18,9 +20,12 @@ public class QuestionServiceImpl implements IQuestionService {
 
     private final QuestionRepository  questionRepository;
 
+    private final KafkaEventProducer kafkaEventProducer;
+
     @Autowired
-    public QuestionServiceImpl(QuestionRepository questionRepository) {
+    public QuestionServiceImpl(QuestionRepository questionRepository, KafkaEventProducer kafkaEventProducer) {
         this.questionRepository = questionRepository;
+        this.kafkaEventProducer = kafkaEventProducer;
     }
 
     @Override
@@ -46,6 +51,23 @@ public class QuestionServiceImpl implements IQuestionService {
                 .map(this::toQuestionResponseDto)
                 .doOnError(error -> System.out.println("search questions failed" + error.getMessage()))
                 .doOnComplete(() -> System.out.println("search questions successfully"));
+    }
+
+    @Override
+    public Mono<QuestionResponseDto> getQuestionById(String id) {
+        return questionRepository.findById(id)
+                .map(this::toQuestionResponseDto)
+                .doOnError(error -> System.out.println("get question by id failed" + error.getMessage()))
+                .doOnSuccess(response -> {
+                            System.out.println("get question by id successfully");
+                            ViewCountEvent viewCountEvent = ViewCountEvent.builder()
+                                    .targetId(id)
+                                    .targetType("question")
+                                    .timestamp(LocalDateTime.now())
+                                    .build();
+                            kafkaEventProducer.publishViewCountEvent(viewCountEvent);
+                        }
+                );
     }
 
     private QuestionResponseDto toQuestionResponseDto(Question question) {

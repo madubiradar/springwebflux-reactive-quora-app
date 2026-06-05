@@ -26,6 +26,12 @@ public class QuestionController {
                 .doOnError(error -> System.out.println("question creation failed" + error.getMessage()));
     }
 
+    @GetMapping("/{id}")
+    public Mono<QuestionResponseDto> getQuestionById(@PathVariable String id) {
+        return questionService.getQuestionById(id)
+                .doOnSuccess(response -> System.out.println("question found successfully" + response))
+                .doOnError(error -> System.out.println("question found failed" + error.getMessage()));
+    }
     @GetMapping
     public Flux<QuestionResponseDto> searchQuestions(
             @RequestParam String query,

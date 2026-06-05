@@ -9,6 +9,11 @@ spring:
       database: quora_db
       auto-index-creation: true
 
+  kafka: # Add this section for Kafka configuration
+    bootstrap-servers: localhost:9092 # Replace with your Kafka broker address if different
+    consumer:
+      group-id: view-count-consumer # This matches your current groupId in KafkaConfig.java
+
 logging:
   level:
     root: DEBUG                # Global log level
